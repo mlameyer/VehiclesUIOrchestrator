@@ -1,0 +1,6 @@
+@VehiclesUIOrchestrator_HostAddress = http://localhost:5105
+
+GET {{VehiclesUIOrchestrator_HostAddress}}/api/
+Accept: application/json
+
+###
