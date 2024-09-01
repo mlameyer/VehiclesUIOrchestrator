@@ -8,13 +8,11 @@ namespace VehiclesUIOrchestrator.Managers
     {
         private readonly ILogger<VehiclesManager> logger;
         private readonly INavixCaseStudyRepository navixCaseStudyRepository;
-        private Dictionary<VehicleFilterKey, List<VehicleByTypeAndOrManufacturerDto>> VehicleSearchCache;
 
         public VehiclesManager(ILogger<VehiclesManager> logger, INavixCaseStudyRepository navixCaseStudyRepository)
         {
             this.logger = logger;
             this.navixCaseStudyRepository = navixCaseStudyRepository;
-            VehicleSearchCache = new Dictionary<VehicleFilterKey, List<VehicleByTypeAndOrManufacturerDto>>();
         }
         
         public async Task<IEnumerable<VehicleByTypeAndOrManufacturerDto>> GetVehiclesByVehicleTypeAndOrManufacturerId(string? vehicleType, int? manufacturerId)
@@ -78,6 +76,10 @@ namespace VehiclesUIOrchestrator.Managers
             else if (vehicleType == null && manufacturerId != null)
             {
                 results = from s in vehicles.Results where s.Mfr_ID == manufacturerId select s;
+            }
+            else
+            {
+                results = vehicles.Results.Where(x => x.VehicleTypes.FirstOrDefault().IsPrimary == true);
             }
 
             return results;
