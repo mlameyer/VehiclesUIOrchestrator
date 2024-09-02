@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Net.Mime;
 using VehiclesUIOrchestrator.api.Dtos;
 using VehiclesUIOrchestrator.Managers;
 
@@ -17,16 +19,21 @@ namespace VehiclesUIOrchestrator.api.Controllers
             _vehiclesManager = vehiclesManager;
         }
 
-        //[HttpGet(Name = "GetVehicles")]
-        //public async Task<IEnumerable<VehicleByTypeAndOrManufacturerDto>> Get()
-        //{
-        //    return await _vehiclesManager.GetVehiclesByVehicleTypeAndOrManufacturerId("Passenger Car", null);
-        //}
-
         [HttpGet(Name = "GetVehiclesByVehicleTypeAndManufacturerId")]
-        public async Task<IEnumerable<VehicleByTypeAndOrManufacturerDto>> Get(string? vehicletype, int? manufacturerid)
+        [Consumes(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        //public async Task<IEnumerable<VehicleByTypeAndOrManufacturerDto>> Get(HttpRequestMessage request, string? vehicletype, int? manufacturerid)
+        public async Task<IActionResult> Get(string? vehicletype, int? manufacturerid)
         {
-            return await _vehiclesManager.GetVehiclesByVehicleTypeAndOrManufacturerId(vehicletype, manufacturerid);
+            var result = await _vehiclesManager.GetVehiclesByVehicleTypeAndOrManufacturerId(vehicletype, manufacturerid);
+
+            if(result.Count() == 0)
+            {
+                return NoContent();
+            }
+
+            return Ok(result);
         }
     }
 }

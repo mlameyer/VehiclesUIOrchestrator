@@ -79,7 +79,7 @@ namespace VehiclesUIOrchestrator.Managers
             }
             else
             {
-                results = vehicles.Results.Where(x => x.VehicleTypes.FirstOrDefault().IsPrimary == true);
+                results = vehicles.Results.Where(x => x.VehicleTypes.Count > 1).Select(s => s).Where(x => x.VehicleTypes.FirstOrDefault().IsPrimary == true);
             }
 
             return results;
