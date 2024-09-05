@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using System.Net.Mime;
-using VehiclesUIOrchestrator.api.Dtos;
 using VehiclesUIOrchestrator.Managers;
 
 namespace VehiclesUIOrchestrator.api.Controllers
@@ -23,7 +21,7 @@ namespace VehiclesUIOrchestrator.api.Controllers
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        //public async Task<IEnumerable<VehicleByTypeAndOrManufacturerDto>> Get(HttpRequestMessage request, string? vehicletype, int? manufacturerid)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Get(string? vehicletype, int? manufacturerid)
         {
             var result = await _vehiclesManager.GetVehiclesByVehicleTypeAndOrManufacturerId(vehicletype, manufacturerid);
