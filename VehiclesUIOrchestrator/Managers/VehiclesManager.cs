@@ -6,26 +6,24 @@ namespace VehiclesUIOrchestrator.Managers
 {
     public class VehiclesManager: IVehiclesManager
     {
-        private readonly ILogger<VehiclesManager> logger;
-        private readonly INavixCaseStudyRepository navixCaseStudyRepository;
+        private readonly ILogger<VehiclesManager> _logger;
+        private readonly INavixCaseStudyRepository _navixCaseStudyRepository;
 
         public VehiclesManager(ILogger<VehiclesManager> logger, INavixCaseStudyRepository navixCaseStudyRepository)
         {
-            this.logger = logger;
-            this.navixCaseStudyRepository = navixCaseStudyRepository;
+            _logger = logger;
+            _navixCaseStudyRepository = navixCaseStudyRepository;
         }
         
         public async Task<IEnumerable<VehicleByTypeAndOrManufacturerDto>> GetVehiclesByVehicleTypeAndOrManufacturerId(string? vehicleType, int? manufacturerId)
         {
-            Vehicles vehicles = await navixCaseStudyRepository.GetListOfAllVehiclesAsync();
+            Vehicles vehicles = await _navixCaseStudyRepository.GetListOfAllVehiclesAsync();
 
-            IEnumerable<Result> filteredResults = FilterVehicleResults(vehicles, vehicleType, manufacturerId);
-            IEnumerable<VehicleByTypeAndOrManufacturerDto> mappedResults = MapVehicleResults(filteredResults);
-
-            return mappedResults;
+            IQueryable<Result> filteredResults = FilterVehicleResults(vehicles, vehicleType, manufacturerId);
+            return MapVehicleResultsToVehicleByTypeAndOrManufacturerDto(filteredResults);
         }
 
-        private IEnumerable<VehicleByTypeAndOrManufacturerDto> MapVehicleResults(IEnumerable<Result> filteredResults)
+        private IEnumerable<VehicleByTypeAndOrManufacturerDto> MapVehicleResultsToVehicleByTypeAndOrManufacturerDto(IQueryable<Result> filteredResults)
         {
             List<VehicleByTypeAndOrManufacturerDto> results = new List<VehicleByTypeAndOrManufacturerDto>();
             Dictionary<string, VehicleByTypeAndOrManufacturerDto> vehicleTypes = new Dictionary<string, VehicleByTypeAndOrManufacturerDto>();
@@ -60,29 +58,25 @@ namespace VehiclesUIOrchestrator.Managers
             return results = vehicleTypes.Values.ToList();
         }
 
-        private static IEnumerable<Result> FilterVehicleResults(Vehicles vehicles, string? vehicleType, int? manufacturerId)
+        private static IQueryable<Result> FilterVehicleResults(Vehicles vehicles, string? vehicleType, int? manufacturerId)
         {
-            IEnumerable<Result> results = new List<Result>();
-
             // Strategy pattern might be a good option
             if (vehicleType != null && manufacturerId != null)
             {
-                results = from s in vehicles.Results where s.Mfr_ID == manufacturerId && s.VehicleTypes.Where(x => x.IsPrimary == true).Select(x => x.Name).Contains(vehicleType) select s;
+                return vehicles.Results.AsQueryable().Where(r => r.Mfr_ID == manufacturerId && r.VehicleTypes.Any(x => x.IsPrimary && x.Name == vehicleType));
             }
             else if (vehicleType != null && manufacturerId == null)
             {
-                results = from s in vehicles.Results where s.VehicleTypes.Where(x => x.IsPrimary == true).Select(x => x.Name).Contains(vehicleType) select s;
+                return vehicles.Results.AsQueryable().Where(v => v.VehicleTypes.Any(x => x.IsPrimary && x.Name == vehicleType));
             }
             else if (vehicleType == null && manufacturerId != null)
             {
-                results = from s in vehicles.Results where s.Mfr_ID == manufacturerId select s;
+                return vehicles.Results.AsQueryable().Where(r => r.Mfr_ID == manufacturerId && r.VehicleTypes.Any(x => x.IsPrimary));
             }
             else
             {
-                results = vehicles.Results.Where(x => x.VehicleTypes.Count > 1).Select(s => s).Where(x => x.VehicleTypes.FirstOrDefault().IsPrimary == true);
+                return vehicles.Results.AsQueryable().Where(r => r.VehicleTypes.Any(x => x.IsPrimary));
             }
-
-            return results;
         }
     }
 }

@@ -26,10 +26,31 @@ namespace VehiclesUIOrchestrator.Managers.Models
     public record class VehicleType
     {
         public bool IsPrimary { get; set; }
+        [JsonConverter(typeof(TrimWhiteSpace))]
         public string? Name { get; set; }
     }
 
-    public class FromIntToStringJsonConverter : JsonConverter<string>
+    internal class TrimWhiteSpace : JsonConverter<string>
+    {
+        public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.Number)
+            {
+                return reader.GetInt32().ToString();
+            }
+            else
+            {
+                return reader.GetString().Trim();
+            }
+        }
+
+        public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    internal class FromIntToStringJsonConverter : JsonConverter<string>
     {
         public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -48,7 +69,7 @@ namespace VehiclesUIOrchestrator.Managers.Models
         }
     }
 
-    public class FromStringToIntJsonConverter : JsonConverter<int>
+    internal class FromStringToIntJsonConverter : JsonConverter<int>
     {
         public override int Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
