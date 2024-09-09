@@ -15,49 +15,59 @@ namespace VehiclesUIOrchestrator.Managers
             _navixCaseStudyRepository = navixCaseStudyRepository;
         }
         
-        public async Task<IEnumerable<VehicleByTypeAndOrManufacturerDto>> GetVehiclesByVehicleTypeAndOrManufacturerId(string? vehicleType, int? manufacturerId)
+        public async Task<IList<VehicleByTypeAndOrManufacturerDto>> GetVehiclesByVehicleTypeAndOrManufacturerId(string? vehicleType, int? manufacturerId)
         {
+            _logger.LogInformation("Calling navixCaseStudyRepository.GetListOfAllVehiclesAsync()");
             Vehicles vehicles = await _navixCaseStudyRepository.GetListOfAllVehiclesAsync();
 
             IQueryable<Result> filteredResults = FilterVehicleResults(vehicles, vehicleType, manufacturerId);
             return MapVehicleResultsToVehicleByTypeAndOrManufacturerDto(filteredResults);
         }
 
-        private IEnumerable<VehicleByTypeAndOrManufacturerDto> MapVehicleResultsToVehicleByTypeAndOrManufacturerDto(IQueryable<Result> filteredResults)
+        private IList<VehicleByTypeAndOrManufacturerDto> MapVehicleResultsToVehicleByTypeAndOrManufacturerDto(IQueryable<Result> filteredResults)
         {
-            List<VehicleByTypeAndOrManufacturerDto> results = new List<VehicleByTypeAndOrManufacturerDto>();
-            Dictionary<string, VehicleByTypeAndOrManufacturerDto> vehicleTypes = new Dictionary<string, VehicleByTypeAndOrManufacturerDto>();
+            Dictionary<string, VehicleByTypeAndOrManufacturerDto> results = new Dictionary<string, VehicleByTypeAndOrManufacturerDto>();
 
-            foreach (var r in filteredResults)
+            try
             {
-                if (vehicleTypes.ContainsKey(r.VehicleTypes.FirstOrDefault().Name))
+                foreach (var r in filteredResults)
                 {
-                    vehicleTypes[r.VehicleTypes.FirstOrDefault().Name].Manufacturers.Add(new Manufacturer()
+                    if (results.ContainsKey(r.VehicleTypes.FirstOrDefault().Name))
                     {
-                        FullName = r.Mfr_Name,
-                        Shortname = r.Mfr_CommonName,
-                        Id = r.Mfr_ID,
-                        Country = r.Country,
-                    });
-                }
-                else
-                {
-                    vehicleTypes.Add(r.VehicleTypes.FirstOrDefault().Name, new VehicleByTypeAndOrManufacturerDto()
+                        results[r.VehicleTypes.FirstOrDefault().Name].Manufacturers.Add(new Manufacturer()
+                        {
+                            FullName = r.Mfr_Name,
+                            Shortname = r.Mfr_CommonName,
+                            Id = r.Mfr_ID,
+                            Country = r.Country,
+                        });
+                    }
+                    else
                     {
-                        VehicleType = r.VehicleTypes.FirstOrDefault().Name,
-                        Manufacturers = new List<Manufacturer>() { new Manufacturer() {
+                        results.Add(r.VehicleTypes.FirstOrDefault().Name, new VehicleByTypeAndOrManufacturerDto()
+                        {
+                            VehicleType = r.VehicleTypes.FirstOrDefault().Name,
+                            Manufacturers = new List<Manufacturer>() { new Manufacturer() {
                                 FullName = r.Mfr_Name,
                                 Shortname = r.Mfr_CommonName,
                                 Id = r.Mfr_ID,
                                 Country = r.Country,
                             } }
-                    });
+                        });
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error attempting to map Vehicle to VehicleByTypeAndOrManufacturerDto: {0}", ex);
+                throw;
+            }
 
-            return results = vehicleTypes.Values.ToList();
+            return results.Values.ToList();
         }
 
+        // IQueryable<t> gets evaluated at compile time. IEnumerable gets evaluated at execution time. There is better
+        // performance using IQueryable because it can be evaluated and optimized by the compiler before execution.
         private static IQueryable<Result> FilterVehicleResults(Vehicles vehicles, string? vehicleType, int? manufacturerId)
         {
             // Strategy pattern might be a good option

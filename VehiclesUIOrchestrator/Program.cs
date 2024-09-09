@@ -4,6 +4,7 @@ using VehiclesUIOrchestrator.Repositories;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+// Scoped objects are the same within a request, but different across different requests
 builder.Services.AddScoped<IVehiclesManager, VehiclesManager>();
 builder.Services.AddScoped<INavixCaseStudyRepository, NavixCaseStudyRepository>();
 builder.Services.AddControllers();

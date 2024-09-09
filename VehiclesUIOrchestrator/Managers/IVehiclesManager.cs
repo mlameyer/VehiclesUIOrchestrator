@@ -4,6 +4,6 @@ namespace VehiclesUIOrchestrator.Managers
 {
     public interface IVehiclesManager
     {
-        public Task<IEnumerable<VehicleByTypeAndOrManufacturerDto>> GetVehiclesByVehicleTypeAndOrManufacturerId(string? vehicleType, int? manufacturerId);
+        public Task<IList<VehicleByTypeAndOrManufacturerDto>> GetVehiclesByVehicleTypeAndOrManufacturerId(string? vehicleType, int? manufacturerId);
     }
 }
